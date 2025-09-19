@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-chart-line"></i> Monitoring System</h1>
+            <p class="lead">Advanced analytics for water quality and motor health</p>
+        </header>
+        
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="#water-tab" onclick="showTab('water')">
+                    <i class="fas fa-tint"></i> Water Quality
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#motor-tab" onclick="showTab('motor')">
+                    <i class="fas fa-cog"></i> Motor Monitor
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#about-tab" onclick="showTab('about')">
+                    <i class="fas fa-info-circle"></i> About
+                </a>
+            </li>
+        </ul>
+        
+        <!-- Water Quality Tab -->
+        <div id="water-tab" class="tab-content">
+            <div class="water-theme">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-tint"></i> Water Quality Analysis</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <form id="waterForm">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="liveToggleWater">
+                                        <label class="form-check-label" for="liveToggleWater"><i class="fas fa-broadcast-tower"></i> Live analysis</label>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="ph" class="form-label"><i class="fas fa-water"></i> pH Level</label>
+                                        <input type="number" step="0.1" class="form-control" id="ph" placeholder="Enter pH value (0-14)" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="hardness" class="form-label"><i class="fas fa-weight"></i> Hardness (mg/L)</label>
+                                        <input type="number" step="0.1" class="form-control" id="hardness" placeholder="Enter hardness value" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="sulfate" class="form-label"><i class="fas fa-flask"></i> Sulfate (mg/L)</label>
+                                        <input type="number" step="0.1" class="form-control" id="sulfate" placeholder="Enter sulfate concentration" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="turbidity" class="form-label"><i class="fas fa-cloud"></i> Turbidity (NTU)</label>
+                                        <input type="number" step="0.1" class="form-control" id="turbidity" placeholder="Enter turbidity value" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-play"></i> Analyze Water Quality
+                                    </button>
+                                </form>
+                                
+                                <div id="waterResult" class="mt-4" style="display:none;">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5><i class="fas fa-vial"></i> Water Quality Assessment</h5>
+                                            <div id="waterQualityResult"></div>
+                                            <div id="waterParameterStatus" class="small mt-3"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="waterAiInsights" class="mt-4" style="display:none;">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5><i class="fas fa-robot"></i> AI Insights</h5>
+                                            <div id="waterAiContent"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="waterSuggestedUses" class="mt-4" style="display:none;">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5><i class="fas fa-hands-helping"></i> Suggested Uses</h5>
+                                            <div id="waterUsesContent" class="small"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="waterAlertPanel" class="mt-4" style="display:none;">
+                                    <div class="card border-warning">
+                                        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Water Alerts</h6>
+                                            <span id="waterAlertCount" class="badge bg-danger">0</span>
+                                        </div>
+                                        <div class="card-body p-2">
+                                            <div id="waterAlertList" style="max-height: 200px; overflow-y: auto;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5><i class="fas fa-info-circle"></i> Water Quality Standards</h5>
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span><i class="fas fa-broadcast-tower"></i> IoT Device Status:</span>
+                                                <span id="iotStatusWater" class="badge bg-secondary">Disconnected</span>
+                                            </div>
+                                            <div class="small text-muted" id="lastUpdateWater">No data received</div>
+                                        </div>
+
+                                        <div id="liveDataWater" class="mb-3" style="display: none;">
+                                            <div class="row text-center">
+                                                <div class="col-3">
+                                                    <div class="border rounded p-2">
+                                                        <div class="h6 mb-0" id="livePh">--</div>
+                                                        <small class="text-muted">pH</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="border rounded p-2">
+                                                        <div class="h6 mb-0" id="liveHardness">-- mg/L</div>
+                                                        <small class="text-muted">Hardness</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="border rounded p-2">
+                                                        <div class="h6 mb-0" id="liveSulfate">-- mg/L</div>
+                                                        <small class="text-muted">Sulfate</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="border rounded p-2">
+                                                        <div class="h6 mb-0" id="liveTurbidity">-- NTU</div>
+                                                        <small class="text-muted">Turbidity</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <span class="quality-indicator" style="background-color: #27ae60;"></span>
+                                            <strong>Drinking Water:</strong> pH 6.5-8.5, Hardness &lt;200mg/L
+                                        </div>
+                                        <div class="mb-3">
+                                            <span class="quality-indicator" style="background-color: #2980b9;"></span>
+                                            <strong>Household Use:</strong> pH 6-9, Hardness &lt;500mg/L
+                                        </div>
+                                        <div class="mb-3">
+                                            <span class="quality-indicator" style="background-color: #8e44ad;"></span>
+                                            <strong>Irrigation:</strong> pH 5.5-8.5, Hardness &lt;1000mg/L
+                                        </div>
+                                        <div class="mb-3">
+                                            <span class="quality-indicator" style="background-color: #c0392b;"></span>
+                                            <strong>Unusable:</strong> Outside safe parameters
+                                        </div>
+                                        
+                                        <div class="mt-4">
+                                            <h6><i class="fas fa-chart-pie"></i> Current Analysis</h6>
+                                            <div id="waterParameterStatusRight" class="small"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Motor Monitor Tab -->
+        <div id="motor-tab" class="tab-content" style="display:none;">
+            <div class="motor-theme">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-cog"></i> Motor Health Monitoring</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <form id="motorForm">
+                                    <div class="mb-3">
+                                        <label for="temp" class="form-label"><i class="fas fa-thermometer-half"></i> Temperature (°C)</label>
+                                        <input type="number" step="0.1" class="form-control" id="temp" placeholder="Enter motor temperature" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="vibration" class="form-label"><i class="fas fa-wave-square"></i> Vibration (mm/s)</label>
+                                        <input type="number" step="0.1" class="form-control" id="vibration" placeholder="Enter vibration level" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="voltage" class="form-label"><i class="fas fa-bolt"></i> Voltage (V)</label>
+                                        <input type="number" step="0.1" class="form-control" id="voltage" placeholder="Enter voltage" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="noise" class="form-label"><i class="fas fa-volume-up"></i> Noise Level (dB)</label>
+                                        <input type="number" step="0.1" class="form-control" id="noise" placeholder="Enter noise level" required>
+                                    </div>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="liveToggleMotor">
+                                        <label class="form-check-label" for="liveToggleMotor"><i class="fas fa-broadcast-tower"></i> Live analysis</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-play"></i> Analyze Motor Health
+                                    </button>
+                                </form>
+                                
+                                <div id="motorResult" class="mt-4" style="display:none;">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5><i class="fas fa-clipboard-check"></i> Motor Health Assessment</h5>
+                                            <div id="motorHealthResult"></div>
+                                            <div id="motorParameters" class="mt-3 small"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Motor Status Panel -->
+                                <div id="motorStatusPanel" class="mt-4" style="display:none;">
+                                    <div class="card border-danger">
+                                        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0"><i class="fas fa-power-off"></i> Motor Status</h6>
+                                            <div>
+                                                <span id="motorStatusBadge" class="badge bg-light text-dark">Running</span>
+                                                <button class="btn btn-sm btn-outline-light ms-2" onclick="toggleMotorControl()" id="motorControlBtn">
+                                                    <i class="fas fa-stop"></i> Stop Motor
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body p-2">
+                                            <div id="motorStatusContent">
+                                                <!-- Motor status content will be populated here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Motor Alert Panel -->
+                                <div id="motorAlertPanel" class="mt-4" style="display:none;">
+                                    <div class="card border-warning">
+                                        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Active Alerts</h6>
+                                            <div>
+                                                <span id="motorAlertCount" class="badge bg-danger">0</span>
+                                                <button class="btn btn-sm btn-outline-dark ms-2" onclick="clearAllMotorAlerts()">
+                                                    <i class="fas fa-trash"></i> Clear All
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body p-2">
+                                            <div id="motorAlertList" style="max-height: 200px; overflow-y: auto;">
+                                                <!-- Alerts will be populated here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5><i class="fas fa-chart-line"></i> Live IoT Monitoring</h5>
+                                        
+                                        <!-- IoT Status -->
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span><i class="fas fa-broadcast-tower"></i> IoT Device Status:</span>
+                                                <span id="iotStatusMotor" class="badge bg-secondary">Disconnected</span>
+                                            </div>
+                                            <div class="small text-muted" id="lastUpdateMotor">No data received</div>
+                                        </div>
+                                        
+                                        <!-- Live Data Display -->
+                                        <div id="liveDataMotor" class="mb-3" style="display: none;">
+                                            <div class="row text-center">
+                                                <div class="col-3">
+                                                    <div class="border rounded p-2">
+                                                        <div class="h5 mb-0" id="liveTemp">--°C</div>
+                                                        <small class="text-muted">Temperature</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="border rounded p-2">
+                                                        <div class="h5 mb-0" id="liveVib">--mm/s</div>
+                                                        <small class="text-muted">Vibration</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="border rounded p-2">
+                                                        <div class="h5 mb-0" id="liveVolt">--V</div>
+                                                        <small class="text-muted">Voltage</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="border rounded p-2">
+                                                        <div class="h5 mb-0" id="liveNoise">--dB</div>
+                                                        <small class="text-muted">Noise</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <canvas id="motorChart" height="200"></canvas>
+                                        
+                                        <!-- AI Insights Panel -->
+                                        <div id="motorAiInsights" class="mt-3" style="display:none;">
+                                            <h6><i class="fas fa-robot"></i> AI Insights</h6>
+                                            <div id="motorAiContent">
+                                                <!-- AI insights will be populated here -->
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-3">
+                                            <h6><i class="fas fa-info-circle"></i> Normal Operating Ranges</h6>
+                                            <ul class="small">
+                                                <li>Temperature: &lt;70°C</li>
+                                                <li>Vibration: &lt;4.5 mm/s</li>
+                                                <li>Voltage: ±10% of rated</li>
+                                                <li>Noise: &lt;85 dB</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Tab -->
+        <div id="about-tab" class="tab-content" style="display:none;">
+            <div class="about-theme">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-info-circle"></i> About This System</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h4><i class="fas fa-tint text-primary-blue"></i> Water Quality Monitoring</h4>
+                                        <p>Our advanced water quality analysis system evaluates multiple parameters to determine suitability for:</p>
+                                        <ul>
+                                            <li><span class="quality-indicator quality-drinking"></span> Drinking water</li>
+                                            <li><span class="quality-indicator quality-household"></span> Household use</li>
+                                            <li><span class="quality-indicator quality-irrigation"></span> Agricultural irrigation</li>
+                                        </ul>
+                                        <p>The system uses machine learning models trained on thousands of water samples to provide accurate assessments.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h4><i class="fas fa-cog text-primary-orange"></i> Motor Health Monitoring</h4>
+                                        <p>Our motor health evaluation system analyzes critical operational parameters including:</p>
+                                        <ul>
+                                            <li>Temperature variations</li>
+                                            <li>Vibration patterns</li>
+                                            <li>Electrical characteristics</li>
+                                            <li>Acoustic signatures</li>
+                                        </ul>
+                                        <p>The system provides a comprehensive health score and maintenance recommendations.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h4><i class="fas fa-chart-line text-primary-purple"></i> System Features</h4>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="feature-box p-3 mb-3 rounded" style="background-color: rgba(52, 152, 219, 0.1);">
+                                                    <i class="fas fa-bolt text-primary-blue"></i>
+                                                    <h6>Real-time Analysis</h6>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="feature-box p-3 mb-3 rounded" style="background-color: rgba(46, 204, 113, 0.1);">
+                                                    <i class="fas fa-brain text-primary-green"></i>
+                                                    <h6>AI-Powered</h6>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="feature-box p-3 mb-3 rounded" style="background-color: rgba(155, 89, 182, 0.1);">
+                                                    <i class="fas fa-mobile-alt text-primary-purple"></i>
+                                                    <h6>Responsive Design</h6>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="feature-box p-3 mb-3 rounded" style="background-color: rgba(230, 126, 34, 0.1);">
+                                                    <i class="fas fa-bell text-primary-orange"></i>
+                                                    <h6>Alert System</h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h4><i class="fas fa-users text-primary-red"></i>Water Quality Monitoring and Motor Control System.</h4>
+                                        <p>This project is made by.</p>
+                                        <p>
+                                            Manas Patel<br>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <p>&copy; Monitoring System | Powered by XGBoost & Autoencoder</p>
+        </footer>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+    // Tab Management
+    function showTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.style.display = 'none';
+        });
+        
+        // Remove active class from all nav links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById(tabName + '-tab').style.display = 'block';
+        
+        // Add active class to clicked nav link
+        event.target.classList.add('active');
+    }
+
+    // Water Quality JavaScript
+    const waterForm = document.getElementById('waterForm');
+    const waterResultDiv = document.getElementById('waterResult');
+    const waterQualityResult = document.getElementById('waterQualityResult');
+    const waterParameterStatus = document.getElementById('waterParameterStatus');
+    const waterParameterStatusRight = document.getElementById('waterParameterStatusRight');
+    const waterAiInsights = document.getElementById('waterAiInsights');
+    const waterAiContent = document.getElementById('waterAiContent');
+    const liveToggleWater = document.getElementById('liveToggleWater');
+    const iotStatusWater = document.getElementById('iotStatusWater');
+    const lastUpdateWater = document.getElementById('lastUpdateWater');
+    const liveDataWater = document.getElementById('liveDataWater');
+    const waterSuggestedUses = document.getElementById('waterSuggestedUses');
+    const waterUsesContent = document.getElementById('waterUsesContent');
+    const waterAlertPanel = document.getElementById('waterAlertPanel');
+    const waterAlertList = document.getElementById('waterAlertList');
+    const waterAlertCount = document.getElementById('waterAlertCount');
+
+    let liveTimerWater = null;
+    let debounceTimerWater = null;
+    let iotDataTimerWater = null;
+    let lastIotUpdateWater = null;
+
+    waterForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const submitBtn = waterForm.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+        submitBtn.disabled = true;
+
+        const ph = parseFloat(document.getElementById('ph').value);
+        const hardness = parseFloat(document.getElementById('hardness').value);
+        const sulfate = parseFloat(document.getElementById('sulfate').value);
+        const turbidity = parseFloat(document.getElementById('turbidity').value);
+
+        try {
+            const data = await analyzeOnceWater(ph, hardness, sulfate, turbidity);
+
+            waterResultDiv.style.display = 'block';
+            const prediction = data.prediction; // 1 = potable, 0 = not potable
+            const pot_p = data.potability_probability ?? (prediction ? 1 : 0);
+
+            waterQualityResult.innerHTML = prediction === 1
+                ? `<div class="alert alert-success">
+                       <i class="fas fa-check-circle"></i> <strong>Potable</strong>
+                       <p class="mb-0 mt-2">Model indicates water is potable.</p>
+                   </div>`
+                : `<div class="alert alert-danger">
+                       <i class="fas fa-times-circle"></i> <strong>Not Potable</strong>
+                       <p class="mb-0 mt-2">Treatment recommended before use.</p>
+                   </div>`;
+
+            const statusHtml = `
+                <div class="mb-2"><strong>pH:</strong> ${ph} ${ph >= 6.5 && ph <= 8.5 ? '✅ Good' : '⚠️ Check'}</div>
+                <div class="mb-2"><strong>Hardness:</strong> ${hardness} mg/L ${hardness < 200 ? '✅ Good' : hardness < 500 ? '⚠️ Acceptable' : '❌ High'}</div>
+                <div class="mb-2"><strong>Sulfate:</strong> ${sulfate} mg/L ${sulfate < 250 ? '✅ Good' : sulfate < 500 ? '⚠️ Acceptable' : '❌ High'}</div>
+                <div class="mb-2"><strong>Turbidity:</strong> ${turbidity} NTU ${turbidity < 5 ? '✅ Good' : turbidity < 10 ? '⚠️ Acceptable' : '❌ High'}</div>
+                <div class="mb-2"><strong>Potability Probability:</strong> ${(pot_p*100).toFixed(1)}%</div>
+            `;
+            waterParameterStatus.innerHTML = statusHtml;
+            waterParameterStatusRight.innerHTML = statusHtml;
+
+            // AI Insights
+            if (data.ai_insights) {
+                waterAiInsights.style.display = 'block';
+                const failurePred = data.ai_insights.failure_prediction || {};
+                const anomalyPred = data.ai_insights.anomaly_detection || {};
+                const maintenancePred = data.ai_insights.maintenance_schedule || {};
+                const healthScore = data.ai_insights.overall_health_score || 0;
+                const recommendations = data.ai_insights.ai_recommendations || [];
+
+                let healthColor = 'success';
+                if (healthScore < 50) healthColor = 'danger';
+                else if (healthScore < 75) healthColor = 'warning';
+
+                waterAiContent.innerHTML = `
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <div class="card border-${healthColor}">
+                                <div class="card-body p-2 text-center">
+                                    <h6 class="mb-1">Quality Score</h6>
+                                    <h4 class="text-${healthColor}">${Math.round(healthScore)}/100</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card border-${failurePred.risk_level === 'CRITICAL' ? 'danger' : failurePred.risk_level === 'HIGH' ? 'warning' : 'success'}">
+                                <div class="card-body p-2 text-center">
+                                    <h6 class="mb-1">Risk Level</h6>
+                                    <h4 class="text-${failurePred.risk_level === 'CRITICAL' ? 'danger' : failurePred.risk_level === 'HIGH' ? 'warning' : 'success'}">${failurePred.risk_level || 'LOW'}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <strong>Non-Potability Probability:</strong> ${((failurePred.failure_probability || 0)*100).toFixed(1)}%
+                    </div>
+
+                    ${anomalyPred.is_anomaly ? `
+                    <div class="alert alert-warning mb-2">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Anomaly Detected!</strong><br>
+                        <small>Severity: ${anomalyPred.severity || 'Unknown'}</small>
+                    </div>
+                    ` : ''}
+
+                    ${maintenancePred.next_maintenance_days ? `
+                    <div class="mb-2">
+                        <strong>Next Check:</strong> ${maintenancePred.next_maintenance_days} days
+                        <span class="badge bg-${maintenancePred.urgency === 'URGENT' ? 'danger' : maintenancePred.urgency === 'HIGH' ? 'warning' : 'info'}">${maintenancePred.urgency || 'LOW'}</span>
+                    </div>
+                    ` : ''}
+
+                    ${recommendations.length > 0 ? `
+                    <div class="mb-2">
+                        <strong>Recommendations:</strong>
+                        <ul class="small mb-0">
+                            ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+                `;
+            } else {
+                waterAiInsights.style.display = 'none';
+            }
+
+            // Suggested uses
+            if (Array.isArray(data.suggested_uses)) {
+                waterSuggestedUses.style.display = 'block';
+                waterUsesContent.innerHTML = `
+                    <ul class="mb-0">
+                        ${data.suggested_uses.map(u => `<li>${u}</li>`).join('')}
+                    </ul>
+                `;
+            } else {
+                waterSuggestedUses.style.display = 'none';
+            }
+
+            // Water alerts from this response
+            if (Array.isArray(data.alerts) && data.alerts.length > 0) {
+                waterAlertPanel.style.display = 'block';
+                waterAlertCount.textContent = data.alerts.length;
+                const recent = data.alerts.slice(-10).reverse();
+                waterAlertList.innerHTML = recent.map(a => {
+                    const cls = a.type === 'critical' ? 'danger' : 'warning';
+                    const time = new Date(a.timestamp).toLocaleTimeString();
+                    return `
+                        <div class="alert alert-${cls} mb-2">
+                            <i class="fas fa-bell"></i> <strong>${a.category || 'alert'}</strong><br>
+                            <small>${a.message || ''}</small><br>
+                            <small class="text-muted">${time}</small>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                waterAlertPanel.style.display = 'none';
+                waterAlertCount.textContent = '0';
+                waterAlertList.innerHTML = '';
+            }
+
+        } catch (err) {
+            waterResultDiv.style.display = 'block';
+            waterQualityResult.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> <strong>Analysis Error</strong>
+                    <p class="mb-0 mt-2">${err.message}</p>
+                </div>
+            `;
+            waterAiInsights.style.display = 'none';
+        } finally {
+            submitBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Re-analyze';
+            submitBtn.disabled = false;
+        }
+    });
+
+    ['ph','hardness','sulfate','turbidity'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+            if (debounceTimerWater) clearTimeout(debounceTimerWater);
+            debounceTimerWater = setTimeout(() => {
+                if (liveToggleWater.checked) {
+                    const ph = parseFloat(document.getElementById('ph').value);
+                    const hardness = parseFloat(document.getElementById('hardness').value);
+                    const sulfate = parseFloat(document.getElementById('sulfate').value);
+                    const turbidity = parseFloat(document.getElementById('turbidity').value);
+                    if (![ph, hardness, sulfate, turbidity].some(v => Number.isNaN(v))) {
+                        analyzeOnceWater(ph, hardness, sulfate, turbidity);
+                    }
+                }
+            }, 400);
+        });
+    });
+
+    liveToggleWater.addEventListener('change', () => {
+        if (liveToggleWater.checked) {
+            // kick off once
+            const ph = parseFloat(document.getElementById('ph').value);
+            const hardness = parseFloat(document.getElementById('hardness').value);
+            const sulfate = parseFloat(document.getElementById('sulfate').value);
+            const turbidity = parseFloat(document.getElementById('turbidity').value);
+            if (![ph, hardness, sulfate, turbidity].some(v => Number.isNaN(v))) {
+                analyzeOnceWater(ph, hardness, sulfate, turbidity);
+            }
+            liveTimerWater = setInterval(() => {
+                const ph = parseFloat(document.getElementById('ph').value);
+                const hardness = parseFloat(document.getElementById('hardness').value);
+                const sulfate = parseFloat(document.getElementById('sulfate').value);
+                const turbidity = parseFloat(document.getElementById('turbidity').value);
+                if (![ph, hardness, sulfate, turbidity].some(v => Number.isNaN(v))) {
+                    analyzeOnceWater(ph, hardness, sulfate, turbidity);
+                }
+            }, 3000);
+            startIotMonitoringWater();
+        } else {
+            if (liveTimerWater) clearInterval(liveTimerWater);
+            if (iotDataTimerWater) clearInterval(iotDataTimerWater);
+            liveTimerWater = null;
+            iotDataTimerWater = null;
+            updateIotStatusWater('Disconnected', 'secondary');
+        }
+    });
+
+    async function analyzeOnceWater(ph, hardness, sulfate, turbidity) {
+        const res = await fetch('/predict_water', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ph, hardness, sulfate, turbidity })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Request failed');
+        return data;
+    }
+
+    function startIotMonitoringWater() {
+        updateIotStatusWater('Connecting...', 'warning');
+        iotDataTimerWater = setInterval(() => {
+            const now = new Date();
+            const timeDiff = lastIotUpdateWater ? (now - lastIotUpdateWater) / 1000 : 999;
+            if (timeDiff > 5) {
+                const iot = generateSimulatedWaterIotData();
+                updateLiveIotDataWater(iot);
+                lastIotUpdateWater = now;
+            }
+        }, 2000);
+    }
+
+    function generateSimulatedWaterIotData() {
+        const ph = 6.8 + (Math.random() - 0.5) * 0.8; // ~6.4-7.2
+        const hardness = 120 + (Math.random() - 0.5) * 60; // ~90-150
+        const sulfate = 180 + (Math.random() - 0.5) * 80; // ~140-220
+        const turbidity = 2 + Math.random() * 2; // 2-4 NTU
+        const faultChance = Math.random();
+        if (faultChance < 0.1) {
+            // contamination case
+            return {
+                ph: Math.max(4.5, Math.min(9.5, ph + (Math.random() < 0.5 ? -1.8 : 1.8))),
+                hardness: hardness + 250,
+                sulfate: sulfate + 300,
+                turbidity: turbidity + 6,
+                contaminated: true
+            };
+        }
+        return { ph: round1(ph), hardness: round1(hardness), sulfate: round1(sulfate), turbidity: round1(turbidity), contaminated: false };
+    }
+
+    function round1(v) { return Math.round(v * 10) / 10; }
+
+    function updateLiveIotDataWater(d) {
+        document.getElementById('livePh').textContent = d.ph;
+        document.getElementById('liveHardness').textContent = d.hardness + ' mg/L';
+        document.getElementById('liveSulfate').textContent = d.sulfate + ' mg/L';
+        document.getElementById('liveTurbidity').textContent = d.turbidity + ' NTU';
+        liveDataWater.style.display = 'block';
+        if (d.contaminated) updateIotStatusWater('Contamination Detected!', 'danger');
+        else updateIotStatusWater('Connected', 'success');
+        lastUpdateWater.textContent = 'Last update: ' + new Date().toLocaleTimeString();
+
+        if (liveToggleWater.checked) {
+            document.getElementById('ph').value = d.ph;
+            document.getElementById('hardness').value = d.hardness;
+            document.getElementById('sulfate').value = d.sulfate;
+            document.getElementById('turbidity').value = d.turbidity;
+            analyzeOnceWater(d.ph, d.hardness, d.sulfate, d.turbidity).then(data => {
+                // after analysis, render UI using existing code
+                // duplicate minimal rendering to trigger UI updates
+                const prediction = data.prediction;
+                waterResultDiv.style.display = 'block';
+            }).catch(() => {});
+        }
+    }
+
+    function updateIotStatusWater(text, type) {
+        iotStatusWater.textContent = text;
+        iotStatusWater.className = `badge bg-${type}`;
+    }
+
+    // Motor Monitoring JavaScript
+    const motorForm = document.getElementById('motorForm');
+    const motorSubmitBtn = motorForm.querySelector('button[type="submit"]');
+    const liveToggleMotor = document.getElementById('liveToggleMotor');
+    const motorResultDiv = document.getElementById('motorResult');
+    const motorHealthResult = document.getElementById('motorHealthResult');
+    const motorParameters = document.getElementById('motorParameters');
+
+    let liveTimerMotor = null;
+    let debounceTimerMotor = null;
+    let iotDataTimerMotor = null;
+    let lastIotUpdateMotor = null;
+    let alertCheckTimerMotor = null;
+    let activeMotorAlerts = [];
+
+    motorForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        motorSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+        motorSubmitBtn.disabled = true;
+        analyzeOnceMotor().finally(() => {
+            motorSubmitBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Re-analyze';
+            motorSubmitBtn.disabled = false;
+        });
+    });
+
+    ['temp','vibration','voltage','noise'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+            if (debounceTimerMotor) clearTimeout(debounceTimerMotor);
+            debounceTimerMotor = setTimeout(() => {
+                if (liveToggleMotor.checked) {
+                    analyzeOnceMotor();
+                }
+            }, 400);
+        });
+    });
+
+    liveToggleMotor.addEventListener('change', () => {
+        if (liveToggleMotor.checked) {
+            analyzeOnceMotor();
+            liveTimerMotor = setInterval(analyzeOnceMotor, 3000);
+            startIotMonitoringMotor();
+            startAlertMonitoringMotor();
+        } else {
+            if (liveTimerMotor) clearInterval(liveTimerMotor);
+            if (iotDataTimerMotor) clearInterval(iotDataTimerMotor);
+            if (alertCheckTimerMotor) clearInterval(alertCheckTimerMotor);
+            liveTimerMotor = null;
+            iotDataTimerMotor = null;
+            alertCheckTimerMotor = null;
+            updateIotStatusMotor('Disconnected', 'secondary');
+        }
+    });
+
+    function startIotMonitoringMotor() {
+        updateIotStatusMotor('Connecting...', 'warning');
+        
+        // Check for IoT data every 2 seconds
+        iotDataTimerMotor = setInterval(async () => {
+            try {
+                // Simulate checking for new IoT data
+                const now = new Date();
+                const timeDiff = lastIotUpdateMotor ? (now - lastIotUpdateMotor) / 1000 : 999;
+                
+                if (timeDiff > 5) {
+                    // Simulate IoT data reception
+                    const iotData = generateSimulatedMotorIotData();
+                    updateLiveIotDataMotor(iotData);
+                    lastIotUpdateMotor = now;
+                }
+            } catch (err) {
+                console.error('IoT monitoring error:', err);
+                updateIotStatusMotor('Error', 'danger');
+            }
+        }, 2000);
+    }
+
+    function generateSimulatedMotorIotData() {
+        // Generate realistic motor sensor data
+        const baseTemp = 50 + Math.random() * 20; // 50-70°C
+        const baseVib = 2 + Math.random() * 2;    // 2-4 mm/s
+        const baseVolt = 220 + Math.random() * 20; // 220-240V
+        const baseNoise = 70 + Math.random() * 15; // 70-85 dB
+        
+        // Occasionally simulate faults
+        const faultChance = Math.random();
+        if (faultChance < 0.1) { // 10% chance of fault
+            return {
+                temp: 75 + Math.random() * 15,
+                vibration: 5 + Math.random() * 3,
+                voltage: 200 + Math.random() * 40,
+                noise: 85 + Math.random() * 10,
+                fault: true
+            };
+        }
+        
+        return {
+            temp: Math.round(baseTemp * 10) / 10,
+            vibration: Math.round(baseVib * 10) / 10,
+            voltage: Math.round(baseVolt * 10) / 10,
+            noise: Math.round(baseNoise * 10) / 10,
+            fault: false
+        };
+    }
+
+    function updateLiveIotDataMotor(data) {
+        // Update live data display
+        document.getElementById('liveTemp').textContent = data.temp + '°C';
+        document.getElementById('liveVib').textContent = data.vibration + 'mm/s';
+        document.getElementById('liveVolt').textContent = data.voltage + 'V';
+        document.getElementById('liveNoise').textContent = data.noise + 'dB';
+        
+        // Show live data section
+        document.getElementById('liveDataMotor').style.display = 'block';
+        
+        // Update status
+        if (data.fault) {
+            updateIotStatusMotor('Fault Detected!', 'danger');
+        } else {
+            updateIotStatusMotor('Connected', 'success');
+        }
+        
+        // Update timestamp
+        document.getElementById('lastUpdateMotor').textContent = 
+            'Last update: ' + new Date().toLocaleTimeString();
+        
+        // Auto-fill form with IoT data if live analysis is enabled
+        if (liveToggleMotor.checked) {
+            document.getElementById('temp').value = data.temp;
+            document.getElementById('vibration').value = data.vibration;
+            document.getElementById('voltage').value = data.voltage;
+            document.getElementById('noise').value = data.noise;
+            
+            // Trigger analysis
+            analyzeOnceMotor();
+        }
+    }
+
+    function updateIotStatusMotor(status, type) {
+        const statusEl = document.getElementById('iotStatusMotor');
+        statusEl.textContent = status;
+        statusEl.className = `badge bg-${type}`;
+    }
+
+    function startAlertMonitoringMotor() {
+        // Check for alerts every 5 seconds
+        alertCheckTimerMotor = setInterval(async () => {
+            try {
+                const response = await fetch('/alerts');
+                const data = await response.json();
+                if (response.ok) {
+                    updateMotorAlertPanel(data.alerts);
+                }
+            } catch (err) {
+                console.error('Alert monitoring error:', err);
+            }
+        }, 5000);
+    }
+
+    function updateMotorAlertPanel(alerts) {
+        const alertPanel = document.getElementById('motorAlertPanel');
+        const alertList = document.getElementById('motorAlertList');
+        const alertCount = document.getElementById('motorAlertCount');
+        
+        if (alerts.length === 0) {
+            alertPanel.style.display = 'none';
+            return;
+        }
+        
+        alertPanel.style.display = 'block';
+        alertCount.textContent = alerts.length;
+        
+        // Show only recent alerts (last 10)
+        const recentAlerts = alerts.slice(-10).reverse();
+        
+        alertList.innerHTML = recentAlerts.map(alert => {
+            const alertClass = alert.type === 'critical' ? 'danger' : 'warning';
+            const icon = alert.type === 'critical' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle';
+            const time = new Date(alert.timestamp).toLocaleTimeString();
+            
+            return `
+                <div class="alert alert-${alertClass} alert-dismissible fade show mb-2" role="alert">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <i class="fas ${icon}"></i>
+                            <strong>${alert.category.toUpperCase()}</strong><br>
+                            <small>${alert.message}</small><br>
+                            <small class="text-muted">${time}</small>
+                        </div>
+                        <button type="button" class="btn-close" onclick="acknowledgeMotorAlert('${alert.id}')" aria-label="Acknowledge"></button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Show browser notification for new critical alerts
+        const newCriticalAlerts = alerts.filter(alert => 
+            alert.type === 'critical' && 
+            !activeMotorAlerts.some(active => active.id === alert.id)
+        );
+        
+        newCriticalAlerts.forEach(alert => {
+            showBrowserNotification(alert);
+        });
+        
+        activeMotorAlerts = alerts;
+    }
+
+    function showBrowserNotification(alert) {
+        if (Notification.permission === 'granted') {
+            new Notification(`Motor Alert - ${alert.category.toUpperCase()}`, {
+                body: alert.message,
+                icon: '/favicon.ico',
+                tag: alert.id
+            });
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    showBrowserNotification(alert);
+                }
+            });
+        }
+    }
+
+    async function acknowledgeMotorAlert(alertId) {
+        try {
+            const response = await fetch(`/alerts/acknowledge/${alertId}`, {
+                method: 'POST'
+            });
+            if (response.ok) {
+                // Remove from UI
+                const alertElement = document.querySelector(`[onclick="acknowledgeMotorAlert('${alertId}')"]`).closest('.alert');
+                alertElement.remove();
+                
+                // Update count
+                const currentCount = parseInt(document.getElementById('motorAlertCount').textContent);
+                document.getElementById('motorAlertCount').textContent = Math.max(0, currentCount - 1);
+            }
+        } catch (err) {
+            console.error('Error acknowledging alert:', err);
+        }
+    }
+
+    async function clearAllMotorAlerts() {
+        if (confirm('Are you sure you want to clear all alerts?')) {
+            try {
+                const response = await fetch('/alerts/clear', {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    document.getElementById('motorAlertPanel').style.display = 'none';
+                    document.getElementById('motorAlertCount').textContent = '0';
+                    activeMotorAlerts = [];
+                }
+            } catch (err) {
+                console.error('Error clearing alerts:', err);
+            }
+        }
+    }
+
+    function updateMotorAIInsights(aiData) {
+        const aiInsights = document.getElementById('motorAiInsights');
+        const aiContent = document.getElementById('motorAiContent');
+        
+        if (!aiData) {
+            aiInsights.style.display = 'none';
+            return;
+        }
+        
+        aiInsights.style.display = 'block';
+        
+        const failurePred = aiData.failure_prediction || {};
+        const anomalyPred = aiData.anomaly_detection || {};
+        const maintenancePred = aiData.maintenance_schedule || {};
+        const healthScore = aiData.overall_health_score || 0;
+        const recommendations = aiData.ai_recommendations || [];
+        
+        // Health Score with color coding
+        let healthColor = 'success';
+        if (healthScore < 50) healthColor = 'danger';
+        else if (healthScore < 75) healthColor = 'warning';
+        
+        aiContent.innerHTML = `
+            <div class="row mb-3">
+                <div class="col-6">
+                    <div class="card border-${healthColor}">
+                        <div class="card-body p-2 text-center">
+                            <h6 class="mb-1">Health Score</h6>
+                            <h4 class="text-${healthColor}">${Math.round(healthScore)}/100</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card border-${failurePred.risk_level === 'CRITICAL' ? 'danger' : failurePred.risk_level === 'HIGH' ? 'warning' : 'success'}">
+                        <div class="card-body p-2 text-center">
+                            <h6 class="mb-1">Failure Risk</h6>
+                            <h4 class="text-${failurePred.risk_level === 'CRITICAL' ? 'danger' : failurePred.risk_level === 'HIGH' ? 'warning' : 'success'}">${failurePred.risk_level || 'LOW'}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-2">
+                <strong>Failure Probability:</strong> ${(failurePred.failure_probability * 100).toFixed(1)}%
+            </div>
+            
+            ${anomalyPred.is_anomaly ? `
+            <div class="alert alert-warning mb-2">
+                <i class="fas fa-exclamation-triangle"></i> <strong>Anomaly Detected!</strong><br>
+                <small>Severity: ${anomalyPred.severity || 'Unknown'}</small>
+            </div>
+            ` : ''}
+            
+            ${maintenancePred.next_maintenance_days ? `
+            <div class="mb-2">
+                <strong>Next Maintenance:</strong> ${maintenancePred.next_maintenance_days} days
+                <span class="badge bg-${maintenancePred.urgency === 'URGENT' ? 'danger' : maintenancePred.urgency === 'HIGH' ? 'warning' : 'info'}">${maintenancePred.urgency || 'LOW'}</span>
+            </div>
+            ` : ''}
+            
+            ${recommendations.length > 0 ? `
+            <div class="mb-2">
+                <strong>AI Recommendations:</strong>
+                <ul class="small mb-0">
+                    ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                </ul>
+            </div>
+            ` : ''}
+        `;
+    }
+
+    async function analyzeOnceMotor() {
+        const temp = parseFloat(document.getElementById('temp').value);
+        const vibration = parseFloat(document.getElementById('vibration').value);
+        const voltage = parseFloat(document.getElementById('voltage').value);
+        const noise = parseFloat(document.getElementById('noise').value);
+
+        if ([temp, vibration, voltage, noise].some(v => Number.isNaN(v))) {
+            return;
+        }
+
+        try {
+            const res = await fetch('/predict_motor', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ temp, vibration, voltage, noise })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Request failed');
+
+            const prediction = data.prediction; // 1 = healthy, 0 = fault
+            const issues = [];
+            if (temp > 70) issues.push('High Temperature');
+            if (vibration > 4.5) issues.push('Excessive Vibration');
+            if (voltage < 200 || voltage > 250) issues.push('Voltage Out of Range');
+            if (noise > 85) issues.push('High Noise Level');
+
+            motorResultDiv.style.display = 'block';
+            if (prediction === 1) {
+                motorHealthResult.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> <strong>Healthy</strong>
+                        <p class="mb-0 mt-2">Model indicates motor is healthy.</p>
+                    </div>
+                `;
+            } else {
+                motorHealthResult.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle"></i> <strong>Potential Fault</strong>
+                        <p class="mb-0 mt-2">Attention suggested for: ${issues.join(', ') || 'model indication'}</p>
+                    </div>
+                `;
+            }
+
+            // Handle alerts from the response
+            if (data.alerts && data.alerts.length > 0) {
+                updateMotorAlertPanel(data.alerts);
+            }
+
+            // Handle motor shutdown status
+            if (data.shutdown_triggered) {
+                let detailedMsg = data.shutdown_reason;
+                if (data.detailed_conditions && data.detailed_conditions.length > 0) {
+                    detailedMsg += `\n\nDetailed Conditions:\n${data.detailed_conditions.join('\n')}`;
+                }
+                showNotification(`🚨 MOTOR AUTOMATICALLY SHUTDOWN: ${data.shutdown_reason}`, 'danger');
+                updateMotorStatus();
+            }
+
+            // Handle AI insights
+            if (data.ai_insights) {
+                updateMotorAIInsights(data.ai_insights);
+            }
+
+            motorParameters.innerHTML = `
+                <div class="row">
+                    <div class="col-6">
+                        <div class="mb-2"><strong>Temperature:</strong> ${temp}°C ${temp < 70 ? '✅ Normal' : '❌ High'}</div>
+                        <div class="mb-2"><strong>Vibration:</strong> ${vibration} mm/s ${vibration < 4.5 ? '✅ Normal' : '❌ High'}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-2"><strong>Voltage:</strong> ${voltage}V ${voltage >= 200 && voltage <= 250 ? '✅ Normal' : '❌ Out of Range'}</div>
+                        <div class="mb-2"><strong>Noise:</strong> ${noise} dB ${noise < 85 ? '✅ Normal' : '❌ High'}</div>
+                    </div>
+                </div>
+            `;
+
+            updateMotorChart(temp, vibration, voltage, noise);
+        } catch (err) {
+            motorResultDiv.style.display = 'block';
+            motorHealthResult.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> <strong>Analysis Error</strong>
+                    <p class="mb-0 mt-2">${err.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    function updateMotorChart(temp, vibration, voltage, noise) {
+        const canvas = document.getElementById('motorChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (window.motorChart && typeof window.motorChart.destroy === 'function') {
+            window.motorChart.destroy();
+        }
+        window.motorChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Temperature', 'Vibration', 'Voltage', 'Noise'],
+                datasets: [{
+                    label: 'Your Motor',
+                    data: [
+                        Math.max(0, Math.min(100, 100 - Math.max(0, temp - 40) * 2)),
+                        Math.max(0, Math.min(100, 100 - Math.max(0, vibration - 2) * 20)),
+                        voltage >= 200 && voltage <= 250 ? 100 : 40,
+                        Math.max(0, Math.min(100, 100 - Math.max(0, noise - 60)))
+                    ],
+                    backgroundColor: 'rgba(230, 126, 34, 0.2)',
+                    borderColor: 'rgba(230, 126, 34, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(230, 126, 34, 1)'
+                }, {
+                    label: 'Ideal',
+                    data: [100, 100, 100, 100],
+                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                    borderColor: 'rgba(46, 204, 113, 1)',
+                    borderWidth: 1,
+                    pointBackgroundColor: 'rgba(46, 204, 113, 1)'
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        angleLines: { display: true },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                },
+                elements: { line: { tension: 0.1 } }
+            }
+        });
+    }
+
+    // Motor Control Functions
+    async function updateMotorStatus() {
+        try {
+            const response = await fetch('/motor/status');
+            const data = await response.json();
+            if (response.ok) {
+                displayMotorStatus(data);
+            }
+        } catch (err) {
+            console.error('Error fetching motor status:', err);
+        }
+    }
+
+    function displayMotorStatus(statusData) {
+        const motorStatusPanel = document.getElementById('motorStatusPanel');
+        const motorStatusBadge = document.getElementById('motorStatusBadge');
+        const motorStatusContent = document.getElementById('motorStatusContent');
+        const motorControlBtn = document.getElementById('motorControlBtn');
+
+        if (!statusData.is_running) {
+            // Motor is shutdown
+            motorStatusPanel.style.display = 'block';
+            motorStatusPanel.className = 'mt-4';
+            motorStatusPanel.querySelector('.card').className = 'card border-danger';
+            motorStatusPanel.querySelector('.card-header').className = 'card-header bg-danger text-white d-flex justify-content-between align-items-center';
+            
+            motorStatusBadge.textContent = 'SHUTDOWN';
+            motorStatusBadge.className = 'badge bg-danger';
+            
+            motorControlBtn.innerHTML = '<i class="fas fa-play"></i> Start Motor';
+            motorControlBtn.className = 'btn btn-sm btn-outline-light ms-2';
+            
+            motorStatusContent.innerHTML = `
+                <div class="alert alert-danger mb-2">
+                    <i class="fas fa-exclamation-triangle"></i> <strong>Motor Shutdown</strong><br>
+                    <small>${statusData.status_message}</small>
+                </div>
+                ${statusData.shutdown_info ? `
+                <div class="small">
+                    <strong>Shutdown Time:</strong> ${new Date(statusData.shutdown_info.time).toLocaleString()}<br>
+                    <strong>Reason:</strong> ${statusData.shutdown_info.reason}<br>
+                    ${statusData.shutdown_info.last_critical_alert ? `
+                    <strong>Critical Conditions:</strong> ${statusData.shutdown_info.last_critical_alert.conditions.join(', ')}<br>
+                    ${statusData.shutdown_info.last_critical_alert.detailed_conditions ? `
+                    <strong>Detailed Analysis:</strong><br>
+                    ${statusData.shutdown_info.last_critical_alert.detailed_conditions.map(cond => `• ${cond}`).join('<br>')}<br>
+                    ` : ''}
+                    <strong>Sensor Data at Shutdown:</strong><br>
+                    - Temperature: ${statusData.shutdown_info.last_critical_alert.sensor_data.temperature}°C<br>
+                    - Vibration: ${statusData.shutdown_info.last_critical_alert.sensor_data.vibration}mm/s<br>
+                    - Voltage: ${statusData.shutdown_info.last_critical_alert.sensor_data.voltage}V<br>
+                    - Noise: ${statusData.shutdown_info.last_critical_alert.sensor_data.noise}dB
+                    ` : ''}
+                </div>
+                ` : ''}
+            `;
+        } else {
+            // Motor is running
+            motorStatusPanel.style.display = 'block';
+            motorStatusPanel.className = 'mt-4';
+            motorStatusPanel.querySelector('.card').className = 'card border-success';
+            motorStatusPanel.querySelector('.card-header').className = 'card-header bg-success text-white d-flex justify-content-between align-items-center';
+            
+            motorStatusBadge.textContent = 'RUNNING';
+            motorStatusBadge.className = 'badge bg-success';
+            
+            motorControlBtn.innerHTML = '<i class="fas fa-stop"></i> Stop Motor';
+            motorControlBtn.className = 'btn btn-sm btn-outline-light ms-2';
+            
+            motorStatusContent.innerHTML = `
+                <div class="alert alert-success mb-2">
+                    <i class="fas fa-check-circle"></i> <strong>Motor Running</strong><br>
+                    <small>${statusData.status_message}</small>
+                </div>
+                <div class="small">
+                    <strong>Auto-shutdown:</strong> ${statusData.auto_shutdown_enabled ? 'Enabled' : 'Disabled'}<br>
+                    <strong>Status:</strong> Normal operation
+                </div>
+            `;
+        }
+    }
+
+    async function toggleMotorControl() {
+        const motorControlBtn = document.getElementById('motorControlBtn');
+        const currentAction = motorControlBtn.innerHTML.includes('Start') ? 'start' : 'stop';
+        
+        motorControlBtn.disabled = true;
+        motorControlBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        try {
+            const response = await fetch('/motor/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: currentAction })
+            });
+            
+            const data = await response.json();
+            if (response.ok) {
+                if (data.success) {
+                    // Show success message
+                    showNotification(data.message, 'success');
+                    // Update motor status
+                    updateMotorStatus();
+                } else {
+                    showNotification(data.message, 'warning');
+                }
+            } else {
+                showNotification(data.message || 'Error controlling motor', 'error');
+            }
+        } catch (err) {
+            console.error('Error controlling motor:', err);
+            showNotification('Error controlling motor', 'error');
+        } finally {
+            motorControlBtn.disabled = false;
+            // Button text will be updated by displayMotorStatus
+        }
+    }
+
+    function showNotification(message, type) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'danger'} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 5000);
+    }
+
+    // Update motor status every 5 seconds
+    setInterval(updateMotorStatus, 5000);
+    
+    // Initialize motor status on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateMotorStatus();
+    });
+    </script>
